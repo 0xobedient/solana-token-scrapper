@@ -32,7 +32,7 @@ export class TokenService implements OnModuleInit {
 
   onModuleInit() {
     this.queue = new PQueue({ concurrency: 1 });
-    this.connectToWebSocketServer();
+    // this.connectToWebSocketServer();
   }
 
   private connectToWebSocketServer() {
@@ -52,7 +52,6 @@ export class TokenService implements OnModuleInit {
       if (token && 'signature' in token) {
         this.queue.add(() => this.handleData(token));
       }
-      console.log(JSON.parse(String(data)));
     });
 
     this.ws.on('close', () => {
@@ -100,7 +99,6 @@ export class TokenService implements OnModuleInit {
   public async getTokenCreation(signature: string, mint: string) {
     try {
       const transaction = await this.getTransaction([signature]);
-      console.log('transaction', transaction);
 
       await new Promise((res) => setTimeout(res, 100));
       if (!transaction) return null;
@@ -137,8 +135,6 @@ export class TokenService implements OnModuleInit {
         transactions: signatures,
       });
 
-      console.log(res.data);
-
       return res.data;
     } catch (error) {
       console.error(error);
@@ -159,8 +155,8 @@ export class TokenService implements OnModuleInit {
   }
 
   public async getTokensByMetadata(
-    name: string,
-    symbol: string,
+    name?: string,
+    symbol?: string,
     sort?: 'asc' | 'desc',
     limit?: number,
   ) {
@@ -169,11 +165,26 @@ export class TokenService implements OnModuleInit {
         ? -1 // desc
         : 1; // asc;
 
-    return this.tokenModel
-      .find({ name, symbol })
-      .sort({ timestamp: safeSort })
-      .limit(limit ?? 100)
-      .exec();
+    if (name && symbol) {
+      return this.tokenModel
+        .find({ name, symbol })
+        .sort({ timestamp: safeSort })
+        .limit(limit ?? 100)
+        .exec();
+    } else if (name) {
+      return this.tokenModel
+        .find({ name })
+        .sort({ timestamp: safeSort })
+        .limit(limit ?? 100)
+        .exec();
+    } else if (symbol) {
+      return this.tokenModel
+        .find({ symbol })
+        .sort({ timestamp: safeSort })
+        .limit(limit ?? 100)
+        .exec();
+    }
+    return null;
   }
 
   public async getTokensByDuration(
@@ -227,16 +238,16 @@ export class TokenService implements OnModuleInit {
 
     if (min !== undefined && max !== undefined) {
       market_cap = {
-        $lte: min,
-        $gte: max,
+        $lte: max,
+        $gte: min,
       };
     } else if (min !== undefined) {
       market_cap = {
-        $lte: min,
+        $gte: min,
       };
     } else if (max !== undefined) {
       market_cap = {
-        $gte: max,
+        $lte: max,
       };
 
       return this.tokenModel;
@@ -257,7 +268,7 @@ export class TokenService implements OnModuleInit {
 
     for (const address of addresses) {
       const token: Token | null = await this.tokenModel
-        .findOne({ mint: address })
+        .findOne({ mint_pubkey: address })
         .exec();
 
       if (token) {
@@ -269,7 +280,7 @@ export class TokenService implements OnModuleInit {
   }
 
   public async getTokensByCreators(addresses: string[], sort?: 'asc' | 'desc') {
-    const data: Token[] = [];
+    let data: Token[] = [];
 
     for (const address of addresses) {
       const tokens: Token[] | null = await this.tokenModel
@@ -277,7 +288,7 @@ export class TokenService implements OnModuleInit {
         .exec();
 
       if (tokens) {
-        data.concat(tokens);
+        data = data.concat(tokens);
       }
     }
 
@@ -292,7 +303,7 @@ export class TokenService implements OnModuleInit {
     addresses: string[],
     sort?: 'asc' | 'desc',
   ) {
-    const data: Token[] = [];
+    let data: Token[] = [];
 
     for (const address of addresses) {
       const tokens: Token[] | null = await this.tokenModel
@@ -300,7 +311,7 @@ export class TokenService implements OnModuleInit {
         .exec();
 
       if (tokens) {
-        data.concat(tokens);
+        data = data.concat(tokens);
       }
     }
 

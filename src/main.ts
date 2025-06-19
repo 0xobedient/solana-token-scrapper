@@ -22,7 +22,7 @@ async function bootstrap() {
     }),
   );
   const config = new DocumentBuilder()
-    .setTitle('Home Memetus bot-server API')
+    .setTitle('memetus pumpfun api')
     .setDescription('API description')
     .setVersion('0.0.1')
     .addBearerAuth()
