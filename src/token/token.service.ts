@@ -18,6 +18,7 @@ import {
 } from '@solana/spl-token';
 import axios from 'axios';
 import PQueue from 'p-queue';
+import { timestamp } from 'rxjs';
 
 @Injectable()
 export class TokenService implements OnModuleInit {
@@ -65,10 +66,6 @@ export class TokenService implements OnModuleInit {
   }
 
   private async handleData(token: TokenType) {
-    // const creation = await this.getTokenCreation(token.signature, token.mint);
-
-    // console.log('creation', creation);
-
     const trader_token_account_pubkey = await getAssociatedTokenAddress(
       new PublicKey(token.mint),
       new PublicKey(token.traderPublicKey),
@@ -147,5 +144,170 @@ export class TokenService implements OnModuleInit {
       console.error(error);
       return null;
     }
+  }
+
+  public async getTokenByAddress(mint: string) {
+    return this.tokenModel.findOne({ mint_pubkey: mint }).exec();
+  }
+
+  public async getTokensByCreator(address: string) {
+    return this.tokenModel.find({ creator_pubkey: address }).exec();
+  }
+
+  public async getTokensByFirstBuyer(address: string) {
+    return this.tokenModel.find({ initial_buy_account_pubkey: address }).exec();
+  }
+
+  public async getTokensByMetadata(
+    name: string,
+    symbol: string,
+    sort?: 'asc' | 'desc',
+    limit?: number,
+  ) {
+    const safeSort =
+      sort !== 'asc'
+        ? -1 // desc
+        : 1; // asc;
+
+    return this.tokenModel
+      .find({ name, symbol })
+      .sort({ timestamp: safeSort })
+      .limit(limit ?? 100)
+      .exec();
+  }
+
+  public async getTokensByDuration(
+    start?: string,
+    end?: string,
+    sort?: 'asc' | 'desc',
+    limit?: number,
+  ) {
+    const safeSort =
+      sort !== 'asc'
+        ? -1 // desc
+        : 1; // asc;
+
+    const startDate = start ? new Date(start) : null;
+    const endDate = end ? new Date(end) : null;
+    let timestamp = {};
+
+    if (startDate && endDate) {
+      timestamp = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+    } else if (startDate) {
+      timestamp = {
+        $gte: startDate,
+      };
+    } else if (endDate) {
+      timestamp = {
+        $lte: endDate,
+      };
+    }
+    return this.tokenModel
+      .find({ timestamp })
+      .sort({ timestamp: safeSort })
+      .limit(limit ?? 100)
+      .exec();
+  }
+
+  public async getTokensByMarketCap(
+    min?: number,
+    max?: number,
+    sort?: 'asc' | 'desc',
+    limit?: number,
+  ) {
+    let market_cap = {};
+
+    const safeSort =
+      sort !== 'asc'
+        ? -1 // desc
+        : 1; // asc;
+
+    if (min !== undefined && max !== undefined) {
+      market_cap = {
+        $lte: min,
+        $gte: max,
+      };
+    } else if (min !== undefined) {
+      market_cap = {
+        $lte: min,
+      };
+    } else if (max !== undefined) {
+      market_cap = {
+        $gte: max,
+      };
+
+      return this.tokenModel;
+    }
+    return this.tokenModel
+      .find({ market_cap })
+      .limit(limit ?? 100)
+      .sort({ timestamp: safeSort })
+      .exec();
+  }
+
+  public async getTokenBySignature(signature: string) {
+    return this.tokenModel.findOne({ signature }).exec();
+  }
+
+  public async getTokensByAddresses(addresses: string[]) {
+    const data: Token[] = [];
+
+    for (const address of addresses) {
+      const token: Token | null = await this.tokenModel
+        .findOne({ mint: address })
+        .exec();
+
+      if (token) {
+        data.push(token);
+      }
+    }
+
+    return data;
+  }
+
+  public async getTokensByCreators(addresses: string[], sort?: 'asc' | 'desc') {
+    const data: Token[] = [];
+
+    for (const address of addresses) {
+      const tokens: Token[] | null = await this.tokenModel
+        .find({ creator_pubkey: address })
+        .exec();
+
+      if (tokens) {
+        data.concat(tokens);
+      }
+    }
+
+    return data.sort((a: Token, b: Token) => {
+      return sort !== 'asc'
+        ? b.timestamp.getTime() - a.timestamp.getTime()
+        : a.timestamp.getTime() - b.timestamp.getTime();
+    });
+  }
+
+  public async getTokensByFirstbuyers(
+    addresses: string[],
+    sort?: 'asc' | 'desc',
+  ) {
+    const data: Token[] = [];
+
+    for (const address of addresses) {
+      const tokens: Token[] | null = await this.tokenModel
+        .find({ initial_buy_account_pubkey: address })
+        .exec();
+
+      if (tokens) {
+        data.concat(tokens);
+      }
+    }
+
+    return data.sort((a: Token, b: Token) => {
+      return sort !== 'asc'
+        ? b.timestamp.getTime() - a.timestamp.getTime()
+        : a.timestamp.getTime() - b.timestamp.getTime();
+    });
   }
 }
