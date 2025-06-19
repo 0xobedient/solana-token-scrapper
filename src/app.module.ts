@@ -9,6 +9,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER } from '@nestjs/core';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
+import { TokenGateway } from './token/token.gateway';
+import { TokenModule } from './token/token.module';
 
 @Module({
   imports: [
@@ -26,12 +28,14 @@ import { HttpExceptionFilter } from './filters/http-exception.filter';
       }),
       inject: [ConfigService],
     }),
+    TokenModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     Logger,
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    TokenGateway,
   ],
 })
 export class AppModule {
