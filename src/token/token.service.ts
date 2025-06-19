@@ -5,7 +5,6 @@ import { Token } from 'src/schema/token.schema';
 import {
   HELIUS_API_ENDPOINT,
   HELIUS_API_KEY_QUERY,
-  HELIUS_RPC_ENDPOINT,
   PUMPPORTAL_WSS_URI,
 } from 'src/shared/constants/endpoint.const';
 import { TokenType } from 'src/shared/types/response/token';
@@ -17,12 +16,10 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import axios from 'axios';
-import PQueue from 'p-queue';
 
 @Injectable()
 export class TokenService implements OnModuleInit {
   private ws: WebSocket;
-  private queue: PQueue;
 
   constructor(
     @InjectModel('Token')
@@ -30,7 +27,6 @@ export class TokenService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.queue = new PQueue({ concurrency: 1 });
     this.connectToWebSocketServer();
   }
 
@@ -49,7 +45,7 @@ export class TokenService implements OnModuleInit {
       const token: TokenType = JSON.parse(String(data));
 
       if (token && 'signature' in token) {
-        this.queue.add(() => this.handleData(token));
+        this.handleData(token);
       }
     });
 
