@@ -18,7 +18,6 @@ import {
 } from '@solana/spl-token';
 import axios from 'axios';
 import PQueue from 'p-queue';
-import { timestamp } from 'rxjs';
 
 @Injectable()
 export class TokenService implements OnModuleInit {
@@ -32,7 +31,7 @@ export class TokenService implements OnModuleInit {
 
   onModuleInit() {
     this.queue = new PQueue({ concurrency: 1 });
-    // this.connectToWebSocketServer();
+    this.connectToWebSocketServer();
   }
 
   private connectToWebSocketServer() {
