@@ -11,6 +11,7 @@ import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { HttpExceptionFilter } from './filters/http-exception.filter';
 import { TokenGateway } from './token/token.gateway';
 import { TokenModule } from './token/token.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TokenModule } from './token/token.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     TokenModule,
   ],
   controllers: [AppController],

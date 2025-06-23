@@ -16,6 +16,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import axios from 'axios';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class TokenService implements OnModuleInit {
@@ -315,5 +316,17 @@ export class TokenService implements OnModuleInit {
         ? b.timestamp.getTime() - a.timestamp.getTime()
         : a.timestamp.getTime() - b.timestamp.getTime();
     });
+  }
+  @Cron('0 * * * *')
+  public async clearToken() {
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24시간 전
+
+    await this.tokenModel.deleteMany({
+      timestamp: { $lt: cutoff },
+    });
+
+    console.log(new Date().toISOString());
+
+    return true;
   }
 }
