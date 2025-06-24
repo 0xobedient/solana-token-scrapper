@@ -138,16 +138,34 @@ export class TokenService implements OnModuleInit {
     }
   }
 
+  public async getRecentTokens(limit?: number) {
+    return this.tokenModel
+      .find({}, { _id: 0 })
+      .sort({ timestamp: -1 })
+      .limit(limit ?? 100)
+      .lean();
+  }
+
+  public async getOldestTokens(limit?: number) {
+    return this.tokenModel
+      .find({}, { _id: 0 })
+      .sort({ timestamp: 1 })
+      .limit(limit ?? 100)
+      .lean();
+  }
+
   public async getTokenByAddress(mint: string) {
-    return this.tokenModel.findOne({ mint_pubkey: mint }).exec();
+    return this.tokenModel.findOne({ mint_pubkey: mint }, { _id: 0 }).lean();
   }
 
   public async getTokensByCreator(address: string) {
-    return this.tokenModel.find({ creator_pubkey: address }).exec();
+    return this.tokenModel.find({ creator_pubkey: address }, { _id: 0 }).lean();
   }
 
   public async getTokensByFirstBuyer(address: string) {
-    return this.tokenModel.find({ initial_buy_account_pubkey: address }).exec();
+    return this.tokenModel
+      .find({ initial_buy_account_pubkey: address }, { _id: 0 })
+      .lean();
   }
 
   public async getTokensByMetadata(
@@ -163,22 +181,22 @@ export class TokenService implements OnModuleInit {
 
     if (name && symbol) {
       return this.tokenModel
-        .find({ name, symbol })
+        .find({ name, symbol }, { _id: 0 })
         .sort({ timestamp: safeSort })
         .limit(limit ?? 100)
-        .exec();
+        .lean();
     } else if (name) {
       return this.tokenModel
-        .find({ name })
+        .find({ name }, { _id: 0 })
         .sort({ timestamp: safeSort })
         .limit(limit ?? 100)
-        .exec();
+        .lean();
     } else if (symbol) {
       return this.tokenModel
-        .find({ symbol })
+        .find({ symbol }, { _id: 0 })
         .sort({ timestamp: safeSort })
         .limit(limit ?? 100)
-        .exec();
+        .lean();
     }
     return null;
   }
@@ -213,10 +231,10 @@ export class TokenService implements OnModuleInit {
       };
     }
     return this.tokenModel
-      .find({ timestamp })
+      .find({ timestamp }, { _id: 0 })
       .sort({ timestamp: safeSort })
       .limit(limit ?? 100)
-      .exec();
+      .lean();
   }
 
   public async getTokensByMarketCap(
@@ -249,14 +267,14 @@ export class TokenService implements OnModuleInit {
       return this.tokenModel;
     }
     return this.tokenModel
-      .find({ market_cap })
+      .find({ market_cap }, { _id: 0 })
       .limit(limit ?? 100)
       .sort({ timestamp: safeSort })
-      .exec();
+      .lean();
   }
 
   public async getTokenBySignature(signature: string) {
-    return this.tokenModel.findOne({ signature }).exec();
+    return this.tokenModel.findOne({ signature }, { _id: 0 }).lean();
   }
 
   public async getTokensByAddresses(addresses: string[]) {
@@ -264,8 +282,8 @@ export class TokenService implements OnModuleInit {
 
     for (const address of addresses) {
       const token: Token | null = await this.tokenModel
-        .findOne({ mint_pubkey: address })
-        .exec();
+        .findOne({ mint_pubkey: address }, { _id: 0 })
+        .lean();
 
       if (token) {
         data.push(token);
@@ -280,8 +298,8 @@ export class TokenService implements OnModuleInit {
 
     for (const address of addresses) {
       const tokens: Token[] | null = await this.tokenModel
-        .find({ creator_pubkey: address })
-        .exec();
+        .find({ creator_pubkey: address }, { _id: 0 })
+        .lean();
 
       if (tokens) {
         data = data.concat(tokens);
@@ -303,8 +321,8 @@ export class TokenService implements OnModuleInit {
 
     for (const address of addresses) {
       const tokens: Token[] | null = await this.tokenModel
-        .find({ initial_buy_account_pubkey: address })
-        .exec();
+        .find({ initial_buy_account_pubkey: address }, { _id: 0 })
+        .lean();
 
       if (tokens) {
         data = data.concat(tokens);

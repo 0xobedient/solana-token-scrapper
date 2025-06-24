@@ -7,6 +7,20 @@ import {
   IsString,
 } from 'class-validator';
 
+export class GetRecentTokenDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumberString()
+  limit?: number;
+}
+
+export class GetOldestTokenDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumberString()
+  limit?: number;
+}
+
 export class GetTokensByAddressesDto {
   @IsArray()
   @IsString({ each: true })

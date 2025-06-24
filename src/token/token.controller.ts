@@ -2,6 +2,8 @@ import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { TokenService } from './token.service';
 import { ApiTags } from '@nestjs/swagger';
 import {
+  GetOldestTokenDto,
+  GetRecentTokenDto,
   GetTokensByAddressesDto,
   GetTokensByCreatorsDto,
   GetTokensByDurationDto,
@@ -14,6 +16,18 @@ import {
 @Controller('/api/token')
 export class TokenController {
   constructor(private readonly tokenService: TokenService) {}
+
+  @Get('recent')
+  get_recent_tokens(@Query() query: GetRecentTokenDto) {
+    const { limit } = query;
+    return this.tokenService.getRecentTokens(limit);
+  }
+
+  @Get('oldest')
+  get_oldest_tokens(@Query() query: GetOldestTokenDto) {
+    const { limit } = query;
+    return this.tokenService.getOldestTokens(limit);
+  }
 
   @Get('mint/:address')
   get_token_by_address(@Param('address') address: string) {
