@@ -17,14 +17,18 @@ import {
 } from '@solana/spl-token';
 import axios from 'axios';
 import { Cron } from '@nestjs/schedule';
+import { TOKEN_DB, TRADE_DB } from 'src/shared/constants/db.const';
+import { Wallet } from 'src/schema/wallet.schema';
 
 @Injectable()
 export class TokenService implements OnModuleInit {
   private ws: WebSocket;
 
   constructor(
-    @InjectModel('Token')
+    @InjectModel('Token', TOKEN_DB)
     private readonly tokenModel: Model<Token>,
+    @InjectModel('Wallet', TRADE_DB)
+    private readonly walletModel: Model<Wallet>,
   ) {}
 
   onModuleInit() {
@@ -85,11 +89,16 @@ export class TokenService implements OnModuleInit {
       symbol: token.symbol,
       uri: token.uri,
     });
+    this.filterWallets(token.traderPublicKey);
   }
 
   private async saveData(data: Token) {
     this.tokenModel.create({ ...data });
     await new Promise((res) => setTimeout(res, 100));
+  }
+
+  private async filterWallets(address: string) {
+    await this.walletModel.findOneAndDelete({ account: address });
   }
 
   public async getTokenCreation(signature: string, mint: string) {
